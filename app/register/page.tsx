@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/auth-store";
 
 export default function RegisterPage() {
@@ -30,7 +30,9 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const client = getSupabaseClient();
+
+      const { error: signUpError } = await client.auth.signUp({
         email,
         password,
         options: {
@@ -66,61 +68,57 @@ export default function RegisterPage() {
         </p>
 
         <form onSubmit={onSubmit} className="mt-7 space-y-4">
-        <div>
-          <label htmlFor="name" className="mb-1 block text-sm font-medium tracking-wide">
-            Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-            className="field-input"
-            placeholder="Your full name"
-          />
-        </div>
+          <div>
+            <label htmlFor="name" className="mb-1 block text-sm font-medium tracking-wide">
+              Name
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+              className="field-input"
+              placeholder="Your full name"
+            />
+          </div>
 
-        <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-medium tracking-wide">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            className="field-input"
-            placeholder="you@company.com"
-          />
-        </div>
+          <div>
+            <label htmlFor="email" className="mb-1 block text-sm font-medium tracking-wide">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              className="field-input"
+              placeholder="you@company.com"
+            />
+          </div>
 
-        <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium tracking-wide">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            minLength={6}
-            className="field-input"
-            placeholder="At least 6 characters"
-          />
-        </div>
+          <div>
+            <label htmlFor="password" className="mb-1 block text-sm font-medium tracking-wide">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              minLength={6}
+              className="field-input"
+              placeholder="At least 6 characters"
+            />
+          </div>
 
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="primary-btn"
-        >
-          {loading ? "Creating account..." : "Register"}
-        </button>
+          <button type="submit" disabled={loading} className="primary-btn">
+            {loading ? "Creating account..." : "Register"}
+          </button>
         </form>
 
         <p className="mt-6 text-sm" style={{ color: "var(--muted)" }}>

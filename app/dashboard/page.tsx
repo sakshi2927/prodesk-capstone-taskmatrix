@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/auth-store";
 
 export default function DashboardPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const isAuthReady = useAuthStore((state) => state.isAuthReady);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (isAuthReady && !user) {
@@ -18,8 +19,17 @@ export default function DashboardPage() {
   }, [isAuthReady, router, user]);
 
   const onLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
+    try {
+      const client = getSupabaseClient();
+      await client.auth.signOut();
+      router.push("/login");
+    } catch (logoutError) {
+      if (logoutError instanceof Error) {
+        setError(logoutError.message);
+      } else {
+        setError("Unable to logout. Please try again.");
+      }
+    }
   };
 
   if (!isAuthReady || !user) {
@@ -79,6 +89,8 @@ export default function DashboardPage() {
           <p className="mt-2 text-sm font-semibold break-all">{user.uid}</p>
         </article>
       </section>
+
+      {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
     </main>
   );
 }

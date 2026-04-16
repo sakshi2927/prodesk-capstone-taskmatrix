@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/auth-store";
 
 export default function LoginForm() {
@@ -31,7 +31,9 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const client = getSupabaseClient();
+
+      const { error: signInError } = await client.auth.signInWithPassword({
         email,
         password,
       });

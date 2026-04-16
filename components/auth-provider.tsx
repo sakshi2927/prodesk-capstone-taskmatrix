@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuthStore } from "@/store/auth-store";
 
 type AuthProviderProps = {
@@ -15,32 +15,42 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   const setAuthReady = useAuthStore((state) => state.setAuthReady);
 
   useEffect(() => {
-    const syncSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.access_token && session.user) {
-        document.cookie = `auth-token=${session.access_token}; path=/; max-age=3600; samesite=lax`;
-
-        setUser({
-          uid: session.user.id,
-          email: session.user.email ?? "",
-          name: (session.user.user_metadata?.full_name as string | undefined) ?? "Anonymous",
-        });
-      } else {
-        document.cookie = "auth-token=; path=/; max-age=0; samesite=lax";
-        clearUser();
-      }
-
+    if (!isSupabaseConfigured) {
+      clearUser();
       setAuthReady(true);
+      return;
+    }
+
+    const client = getSupabaseClient();
+
+    const syncSession = async () => {
+      try {
+        const {
+          data: { session },
+        } = await client.auth.getSession();
+
+        if (session?.access_token && session.user) {
+          document.cookie = `auth-token=${session.access_token}; path=/; max-age=3600; samesite=lax`;
+
+          setUser({
+            uid: session.user.id,
+            email: session.user.email ?? "",
+            name: (session.user.user_metadata?.full_name as string | undefined) ?? "Anonymous",
+          });
+        } else {
+          document.cookie = "auth-token=; path=/; max-age=0; samesite=lax";
+          clearUser();
+        }
+      } finally {
+        setAuthReady(true);
+      }
     };
 
     void syncSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = client.auth.onAuthStateChange((_event, session) => {
       if (session?.access_token && session.user) {
         document.cookie = `auth-token=${session.access_token}; path=/; max-age=3600; samesite=lax`;
 

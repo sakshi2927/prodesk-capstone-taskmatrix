@@ -45,7 +45,13 @@ export default function LoginForm() {
       router.push("/dashboard");
     } catch (submitError) {
       if (submitError instanceof Error) {
-        setError(submitError.message);
+        if (submitError.message.toLowerCase() === "invalid login credentials") {
+          setError(
+            "Invalid login credentials. If you just signed up, confirm your email first and then try again.",
+          );
+        } else {
+          setError(submitError.message);
+        }
       } else {
         setError("Unable to login. Please try again.");
       }

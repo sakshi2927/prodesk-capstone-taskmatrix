@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (isAuthReady && user) {
@@ -27,15 +28,18 @@ export default function RegisterPage() {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
+    setSuccessMessage("");
     setLoading(true);
 
     try {
       const client = getSupabaseClient();
 
-      const { error: signUpError } = await client.auth.signUp({
+      const { data, error: signUpError } = await client.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo:
+            typeof window !== "undefined" ? `${window.location.origin}/login` : undefined,
           data: {
             full_name: name,
           },
@@ -46,7 +50,14 @@ export default function RegisterPage() {
         throw signUpError;
       }
 
-      router.push("/login?registered=1");
+      if (data.session) {
+        router.push("/dashboard");
+        return;
+      }
+
+      setSuccessMessage(
+        "Account created. Check your email for the confirmation link before logging in.",
+      );
     } catch (submitError) {
       if (submitError instanceof Error) {
         setError(submitError.message);
@@ -75,6 +86,12 @@ export default function RegisterPage() {
             <li>Completion analytics with visual insights</li>
           </ul>
         </div>
+
+        {successMessage ? (
+          <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+            {successMessage}
+          </p>
+        ) : null}
 
         <form onSubmit={onSubmit} className="mt-7 space-y-4">
           <div>

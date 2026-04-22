@@ -11,6 +11,7 @@ This repository currently contains the frontend app built with Next.js 16, Supab
 1. Create a Supabase project.
 2. In Supabase, enable Email authentication.
 3. Copy `.env.local.example` to `.env.local` and fill in your Supabase URL and anon key.
+4. In Supabase SQL Editor, run `supabase/tasks.sql` to create the `tasks` table and RLS policies.
 
 ## Getting Started
 
@@ -35,6 +36,14 @@ The authenticated user is stored in Zustand and displayed in the dashboard with:
 - Name
 - Email
 - UID
+
+## Dashboard CRUD + Analytics
+
+- Dashboard now fetches only the logged-in user's tasks from Supabase.
+- You can add a task using the dashboard form (cloud save + instant UI update).
+- Each task row includes Edit and Delete actions.
+- Delete action includes an `Are you sure?` confirmation prompt.
+- Analytics chart visualizes completed tasks by day using Recharts.
 
 ## Planned Product Scope
 

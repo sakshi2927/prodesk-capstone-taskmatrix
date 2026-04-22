@@ -56,12 +56,17 @@ export default function LoginForm() {
 
   return (
     <main className="auth-shell">
-      <section className="auth-card rise-in">
+      <section className="auth-card auth-card-login rise-in">
         <span className="auth-badge">ProDesk Hub</span>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">Welcome back</h1>
         <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
           Sign in to open your private workspace dashboard.
         </p>
+
+        <div className="auth-accent-strip mt-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.1em]">Today in TaskMatrix</p>
+          <p className="mt-1.5 text-sm">Track progress, update priorities, and move faster with your live dashboard.</p>
+        </div>
 
         {isRegistered ? (
           <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
@@ -100,7 +105,7 @@ export default function LoginForm() {
             />
           </div>
 
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="error-note text-sm">{error}</p> : null}
 
           <button type="submit" disabled={loading} className="primary-btn">
             {loading ? "Logging in..." : "Login"}

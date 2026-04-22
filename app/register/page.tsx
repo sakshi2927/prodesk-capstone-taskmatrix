@@ -60,12 +60,21 @@ export default function RegisterPage() {
 
   return (
     <main className="auth-shell">
-      <section className="auth-card rise-in">
+      <section className="auth-card auth-card-register rise-in">
         <span className="auth-badge">ProDesk Hub</span>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">Create account</h1>
         <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
           Set up your profile and continue to your dashboard.
         </p>
+
+        <div className="auth-accent-strip mt-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.1em]">What you unlock</p>
+          <ul className="auth-point-list mt-1.5 text-sm">
+            <li>Private task workspace synced to cloud</li>
+            <li>Full create, edit, and delete controls</li>
+            <li>Completion analytics with visual insights</li>
+          </ul>
+        </div>
 
         <form onSubmit={onSubmit} className="mt-7 space-y-4">
           <div>
@@ -114,7 +123,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="error-note text-sm">{error}</p> : null}
 
           <button type="submit" disabled={loading} className="primary-btn">
             {loading ? "Creating account..." : "Register"}

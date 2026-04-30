@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 
 import { getSupabaseClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/auth-store";
+import { createDemoUser, isFetchFailure, saveDemoSession } from "@/lib/demo-auth";
+
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -30,6 +33,13 @@ export default function RegisterPage() {
     setError("");
     setSuccessMessage("");
     setLoading(true);
+
+    if (isDemoMode) {
+      saveDemoSession(createDemoUser(email, name));
+      router.push("/dashboard");
+      setLoading(false);
+      return;
+    }
 
     try {
       const client = getSupabaseClient();
@@ -59,6 +69,12 @@ export default function RegisterPage() {
         "Account created. Check your email for the confirmation link before logging in.",
       );
     } catch (submitError) {
+      if (isFetchFailure(submitError)) {
+        saveDemoSession(createDemoUser(email, name));
+        router.push("/dashboard");
+        return;
+      }
+
       if (submitError instanceof Error) {
         setError(submitError.message);
       } else {
@@ -79,7 +95,7 @@ export default function RegisterPage() {
         </p>
 
         <div className="auth-accent-strip mt-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.1em]">What you unlock</p>
+          <p className="text-xs font-semibold uppercase tracking-widest">What you unlock</p>
           <ul className="auth-point-list mt-1.5 text-sm">
             <li>Private task workspace synced to cloud</li>
             <li>Full create, edit, and delete controls</li>

@@ -4,6 +4,9 @@ import { useEffect } from "react";
 
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuthStore } from "@/store/auth-store";
+import { clearDemoSession, readDemoSession } from "@/lib/demo-auth";
+
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
 
 type AuthProviderProps = {
   children: React.ReactNode;
@@ -15,6 +18,21 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   const setAuthReady = useAuthStore((state) => state.setAuthReady);
 
   useEffect(() => {
+    if (isDemoMode) {
+      const demoSession = readDemoSession();
+
+      if (demoSession) {
+        document.cookie = `auth-token=demo-${demoSession.uid}; path=/; max-age=604800; samesite=lax`;
+        setUser(demoSession);
+      } else {
+        clearDemoSession();
+        clearUser();
+      }
+
+      setAuthReady(true);
+      return;
+    }
+
     if (!isSupabaseConfigured) {
       clearUser();
       setAuthReady(true);
@@ -38,7 +56,24 @@ export default function AuthProvider({ children }: AuthProviderProps) {
             name: (session.user.user_metadata?.full_name as string | undefined) ?? "Anonymous",
           });
         } else {
-          document.cookie = "auth-token=; path=/; max-age=0; samesite=lax";
+          const demoSession = readDemoSession();
+
+          if (demoSession) {
+            document.cookie = `auth-token=demo-${demoSession.uid}; path=/; max-age=604800; samesite=lax`;
+            setUser(demoSession);
+          } else {
+            clearDemoSession();
+            clearUser();
+          }
+        }
+      } catch {
+        const demoSession = readDemoSession();
+
+        if (demoSession) {
+          document.cookie = `auth-token=demo-${demoSession.uid}; path=/; max-age=604800; samesite=lax`;
+          setUser(demoSession);
+        } else {
+          clearDemoSession();
           clearUser();
         }
       } finally {
@@ -60,8 +95,15 @@ export default function AuthProvider({ children }: AuthProviderProps) {
           name: (session.user.user_metadata?.full_name as string | undefined) ?? "Anonymous",
         });
       } else {
-        document.cookie = "auth-token=; path=/; max-age=0; samesite=lax";
-        clearUser();
+        const demoSession = readDemoSession();
+
+        if (demoSession) {
+          document.cookie = `auth-token=demo-${demoSession.uid}; path=/; max-age=604800; samesite=lax`;
+          setUser(demoSession);
+        } else {
+          clearDemoSession();
+          clearUser();
+        }
       }
 
       setAuthReady(true);

@@ -6,6 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { getSupabaseClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/auth-store";
+import { createDemoUser, isFetchFailure, saveDemoSession } from "@/lib/demo-auth";
+
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -30,6 +33,13 @@ export default function LoginForm() {
     setError("");
     setLoading(true);
 
+    if (isDemoMode) {
+      saveDemoSession(createDemoUser(email));
+      router.push("/dashboard");
+      setLoading(false);
+      return;
+    }
+
     try {
       const client = getSupabaseClient();
 
@@ -44,6 +54,12 @@ export default function LoginForm() {
 
       router.push("/dashboard");
     } catch (submitError) {
+      if (isFetchFailure(submitError)) {
+        saveDemoSession(createDemoUser(email));
+        router.push("/dashboard");
+        return;
+      }
+
       if (submitError instanceof Error) {
         if (submitError.message.toLowerCase() === "invalid login credentials") {
           setError(
@@ -70,7 +86,7 @@ export default function LoginForm() {
         </p>
 
         <div className="auth-accent-strip mt-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.1em]">Today in TaskMatrix</p>
+          <p className="text-xs font-semibold uppercase tracking-widest">Today in TaskMatrix</p>
           <p className="mt-1.5 text-sm">Track progress, update priorities, and move faster with your live dashboard.</p>
         </div>
 

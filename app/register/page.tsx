@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { getSupabaseClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/auth-store";
 import { createDemoUser, isFetchFailure, saveDemoSession } from "@/lib/demo-auth";
 
@@ -41,8 +42,6 @@ export default function RegisterPage() {
     }
 
     try {
-      // Dynamically import Supabase only when needed (on form submission)
-      const { getSupabaseClient } = await import("@/lib/supabase");
       const client = getSupabaseClient();
 
       const { data, error: signUpError } = await client.auth.signUp({

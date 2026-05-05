@@ -1,16 +1,8 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { toast } from "sonner";
 
 import { clearDemoSession, isFetchFailure } from "@/lib/demo-auth";
@@ -19,6 +11,18 @@ import { getSupabaseClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/auth-store";
 
 import type { TaskItem, TaskStatus } from "@/lib/task-types";
+
+const AnalyticsChart = dynamic(() => import("@/components/dashboard-analytics-chart"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="grid h-full place-items-center rounded-xl border border-dashed text-sm"
+      style={{ borderColor: "var(--line)", color: "var(--muted)", background: "rgba(255,255,255,0.65)" }}
+    >
+      Loading chart...
+    </div>
+  ),
+});
 
 const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
 
@@ -834,15 +838,7 @@ export default function DashboardPage() {
 
           <div className="chart-panel h-64 w-full">
             {completedTasksByDay.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={completedTasksByDay} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(140,120,98,0.25)" />
-                  <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Bar dataKey="total" fill="#c14f2a" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <AnalyticsChart data={completedTasksByDay} />
             ) : (
               <div
                 className="grid h-full place-items-center rounded-xl border border-dashed text-sm"

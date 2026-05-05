@@ -22,10 +22,7 @@
 }
 
 body {
-  background:
-    radial-gradient(circle at 10% 0%, rgba(193, 79, 42, 0.2), transparent 44%),
-    radial-gradient(circle at 90% 100%, rgba(247, 194, 119, 0.24), transparent 40%),
-    linear-gradient(130deg, #faf4e8 0%, #fffdf8 48%, #f7efe2 100%);
+  background: linear-gradient(135deg, #faf4e8 0%, #fffdf8 50%, #f7efe2 100%);
   color: var(--foreground);
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
   line-height: 1.45;
@@ -62,23 +59,14 @@ html {
 }
 
 .auth-shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 12% 14%, rgba(255, 198, 128, 0.28), transparent 34%),
-    radial-gradient(circle at 84% 82%, rgba(193, 79, 42, 0.19), transparent 38%);
+  display: none;
 }
 
 .auth-card {
   width: min(100%, 31rem);
   border-radius: 1.5rem;
   border: 1px solid color-mix(in oklab, var(--line) 88%, rgba(193, 79, 42, 0.24));
-  background:
-    radial-gradient(circle at 88% 8%, rgba(255, 232, 196, 0.52), transparent 30%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 251, 247, 0.77));
-  backdrop-filter: blur(12px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 251, 247, 0.85));
   box-shadow: 0 26px 60px rgba(73, 52, 35, 0.2);
   padding: 1.35rem;
   position: relative;
@@ -86,24 +74,11 @@ html {
 }
 
 .auth-card::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  pointer-events: none;
-  border-radius: inherit;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.62), transparent 42%);
-  opacity: 0.8;
+  display: none;
 }
 
 .auth-card::after {
-  content: "";
-  position: absolute;
-  inset: auto auto -5rem -4rem;
-  width: 10rem;
-  height: 10rem;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(193, 79, 42, 0.22), transparent 68%);
-  pointer-events: none;
+  display: none;
 }
 
 .auth-card-login {
@@ -115,13 +90,13 @@ html {
 }
 
 .auth-card-register::after {
-  background: radial-gradient(circle, rgba(68, 147, 98, 0.22), transparent 68%);
+  display: none;
 }
 
 .auth-accent-strip {
   border-radius: 0.85rem;
   border: 1px solid rgba(154, 111, 72, 0.22);
-  background: linear-gradient(160deg, rgba(255, 246, 234, 0.94), rgba(255, 255, 255, 0.82));
+  background: rgba(255, 250, 245, 0.9);
   padding: 0.68rem 0.78rem;
   color: #5b4636;
 }
@@ -266,12 +241,11 @@ html {
 .mobile-menu-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(34, 25, 19, 0.34);
-  backdrop-filter: blur(4px);
+  background: rgba(34, 25, 19, 0.5);
 }
 
 .mobile-menu-panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 249, 242, 0.96));
+  background: rgba(255, 255, 255, 0.98);
   box-shadow: var(--shadow-strong);
 }
 
@@ -286,48 +260,30 @@ html {
 }
 
 .dashboard-shell::before {
-  content: "";
-  position: fixed;
-  inset: auto -8rem -8rem auto;
-  width: 18rem;
-  height: 18rem;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(193, 79, 42, 0.15), transparent 68%);
-  pointer-events: none;
-  z-index: -1;
+  display: none;
 }
 
 .hero-band {
   position: relative;
-  background:
-    radial-gradient(circle at 15% 12%, rgba(255, 214, 163, 0.45), transparent 42%),
-    radial-gradient(circle at 90% 86%, rgba(193, 79, 42, 0.2), transparent 36%),
-    linear-gradient(140deg, rgba(255, 255, 255, 0.88), rgba(255, 247, 237, 0.72));
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 247, 237, 0.85));
   box-shadow: 0 24px 56px rgba(75, 47, 29, 0.18);
 }
 
 .hero-glow {
-  position: absolute;
-  right: -3.5rem;
-  top: -3rem;
-  width: 12rem;
-  height: 12rem;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(193, 79, 42, 0.32), transparent 66%);
-  pointer-events: none;
+  display: none;
 }
 
 .kpi-pill {
   border-radius: 999px;
   border: 1px solid rgba(145, 106, 72, 0.24);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 247, 237, 0.75));
+  background: rgba(255, 255, 255, 0.85);
   padding: 0.24rem 0.7rem;
 }
 
 .chart-panel {
   border-radius: 0.9rem;
   border: 1px solid rgba(145, 106, 72, 0.18);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.46));
+  background: rgba(255, 255, 255, 0.6);
   padding: 0.6rem;
   min-width: 0;
   min-height: 0;
@@ -364,7 +320,7 @@ html {
 
 .delete-btn {
   border-color: rgba(175, 72, 43, 0.32);
-  background: linear-gradient(180deg, rgba(255, 242, 238, 0.96), rgba(255, 233, 227, 0.88));
+  background: rgba(255, 240, 235, 0.9);
   color: #a3331c;
 }
 
@@ -384,7 +340,7 @@ html {
   position: sticky;
   top: 0;
   z-index: 1;
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .task-table .task-row td {

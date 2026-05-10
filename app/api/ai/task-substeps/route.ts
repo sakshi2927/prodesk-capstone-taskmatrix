@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { requestJson } from "@/lib/request";
+
 type RequestBody = {
   title?: unknown;
   description?: unknown;
@@ -102,33 +104,7 @@ export async function POST(request: Request) {
   ].join("\n");
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 256,
-          },
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      return NextResponse.json({ subtasks: fallbackSubtasks(title, description) });
-    }
-
-    const data = (await response.json().catch(() => null)) as
+    const data = await requestJson<
       | {
           candidates?: Array<{
             content?: {
@@ -136,7 +112,25 @@ export async function POST(request: Request) {
             };
           }>;
         }
-      | null;
+    >(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 256,
+        },
+      }),
+      timeoutMs: 15000,
+    });
 
     const modelText = data?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
     const subtasks = parseJsonArray(modelText);

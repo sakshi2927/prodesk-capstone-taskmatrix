@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { clearDemoSession, isFetchFailure } from "@/lib/demo-auth";
 import { readDemoTasks, saveDemoTasks } from "@/lib/demo-tasks";
+import { getRequestErrorMessage, requestJson } from "@/lib/request";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -105,6 +106,8 @@ function formatAiSubtasks(subtasks: string[]): string {
   return subtasks.map((subtask) => `- ${subtask}`).join("\n");
 }
 
+const AI_SUBTASK_TIMEOUT_MS = 12000;
+
 export default function DashboardPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
@@ -128,6 +131,7 @@ export default function DashboardPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [aiSubtasks, setAiSubtasks] = useState<string[]>([]);
   const [isGeneratingSubtasks, setIsGeneratingSubtasks] = useState(false);
+  const [aiSubtaskError, setAiSubtaskError] = useState("");
 
   const completedTasksByDay = useMemo(() => {
     const aggregate = new Map<string, number>();
@@ -246,12 +250,12 @@ export default function DashboardPage() {
 
   const onGenerateSubtasks = async () => {
     if (!createTitle.trim()) {
-      setTasksError("Add a title before generating sub-steps.");
+      setAiSubtaskError("Add a title before generating sub-steps.");
       toast.error("Add a title before generating sub-steps.");
       return;
     }
 
-    setTasksError("");
+    setAiSubtaskError("");
     setIsGeneratingSubtasks(true);
 
     if (isDemoMode) {
@@ -263,13 +267,14 @@ export default function DashboardPage() {
         `Review edge cases, dependencies, and risks for ${createTitle.trim()}.`,
         `Test and ship ${createTitle.trim()} with a quick verification pass.`,
       ]);
+      setAiSubtaskError("");
       toast.success("Sub-steps generated.");
       setIsGeneratingSubtasks(false);
       return;
     }
 
     try {
-      const response = await fetch("/api/ai/task-substeps", {
+      const data = await requestJson<{ subtasks?: unknown; error?: string }>("/api/ai/task-substeps", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -278,15 +283,8 @@ export default function DashboardPage() {
           title: createTitle.trim(),
           description: createDescription.trim(),
         }),
+        timeoutMs: AI_SUBTASK_TIMEOUT_MS,
       });
-
-      const data = (await response.json().catch(() => null)) as
-        | { subtasks?: unknown; error?: string }
-        | null;
-
-      if (!response.ok) {
-        throw new Error(data?.error ?? "Unable to generate sub-steps right now.");
-      }
 
       const generatedSubtasks = Array.isArray(data?.subtasks)
         ? (data?.subtasks as unknown[])
@@ -299,10 +297,11 @@ export default function DashboardPage() {
       }
 
       setAiSubtasks(generatedSubtasks);
+      setAiSubtaskError("");
       toast.success("Sub-steps generated.");
     } catch (generateError) {
-      const message = generateError instanceof Error ? generateError.message : "Unable to generate sub-steps right now.";
-      setTasksError(message);
+      const message = getRequestErrorMessage(generateError, "Unable to generate sub-steps right now.");
+      setAiSubtaskError(message);
       toast.error(message);
     } finally {
       setIsGeneratingSubtasks(false);
@@ -646,7 +645,7 @@ export default function DashboardPage() {
               </nav>
             </div>
 
-            <div className="flex items-center gap-3 self-start">
+            <div className="flex flex-wrap items-center gap-3 self-start">
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(true)}
@@ -793,6 +792,7 @@ export default function DashboardPage() {
                   onClick={() => void onGenerateSubtasks()}
                   disabled={isGeneratingSubtasks}
                   className="ghost-btn px-4 py-2 text-sm font-semibold"
+                    aria-busy={isGeneratingSubtasks}
                 >
                   {isGeneratingSubtasks ? "Generating..." : "Generate sub-steps"}
                 </button>
@@ -803,14 +803,35 @@ export default function DashboardPage() {
                 ) : null}
               </div>
 
+                {isGeneratingSubtasks ? (
+                  <div className="mt-4 rounded-2xl border px-4 py-3 text-sm" style={{ borderColor: "var(--line)", background: "rgba(255,255,255,0.86)", color: "var(--muted)" }}>
+                    <div className="flex items-center gap-3">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2" style={{ borderColor: "var(--line)", borderTopColor: "var(--brand)" }} />
+                      <p>Drafting sub-steps from your task details.</p>
+                    </div>
+                  </div>
+                ) : null}
+
+                {aiSubtaskError ? (
+                  <div className="error-note mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm">{aiSubtaskError}</p>
+                    <button type="button" onClick={() => void onGenerateSubtasks()} className="ghost-btn px-4 py-2 text-sm font-semibold sm:shrink-0">
+                      Try again
+                    </button>
+                  </div>
+                ) : null}
+
               {aiSubtasks.length ? (
-                <ul className="mt-4 grid gap-2 text-sm" style={{ color: "var(--foreground)" }}>
-                  {aiSubtasks.map((subtask) => (
-                    <li key={subtask} className="rounded-xl border px-3 py-2" style={{ borderColor: "var(--line)", background: "rgba(255,255,255,0.82)" }}>
-                      {subtask}
-                    </li>
+                  <ol className="mt-4 grid gap-3 text-sm" style={{ color: "var(--foreground)" }}>
+                    {aiSubtasks.map((subtask, index) => (
+                      <li key={`${subtask}-${index}`} className="flex gap-3 rounded-2xl border px-3 py-3" style={{ borderColor: "var(--line)", background: "rgba(255,255,255,0.86)" }}>
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: "rgba(193,79,42,0.12)", color: "var(--brand-strong)" }}>
+                          {index + 1}
+                        </span>
+                        <span className="min-w-0 flex-1 leading-relaxed">{subtask}</span>
+                      </li>
                   ))}
-                </ul>
+                  </ol>
               ) : null}
             </div>
 
@@ -926,7 +947,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="hidden md:block overflow-x-auto">
-              <table className="task-table min-w-full border-separate border-spacing-y-2">
+              <table className="task-table min-w-full table-fixed border-separate border-spacing-y-2">
                 <thead>
                   <tr>
                     <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--muted)" }}>
@@ -950,10 +971,10 @@ export default function DashboardPage() {
                 <tbody>
                   {tasks.map((task) => (
                     <tr key={task.id} className="task-row rounded-xl">
-                      <td className="rounded-l-xl border-y border-l px-3 py-3 text-sm font-medium" style={{ borderColor: "var(--line)", background: "rgba(255,255,255,0.88)" }}>
+                      <td className="rounded-l-xl border-y border-l px-3 py-3 text-sm font-medium truncate" style={{ borderColor: "var(--line)", background: "rgba(255,255,255,0.88)" }}>
                         {task.title}
                       </td>
-                      <td className="border-y px-3 py-3 text-sm" style={{ borderColor: "var(--line)", background: "rgba(255,255,255,0.88)" }}>
+                      <td className="border-y px-3 py-3 text-sm truncate" style={{ borderColor: "var(--line)", background: "rgba(255,255,255,0.88)" }}>
                         {formatTaskSummary(task.description)}
                       </td>
                       <td className="border-y px-3 py-3 text-sm" style={{ borderColor: "var(--line)", background: "rgba(255,255,255,0.88)" }}>
@@ -991,7 +1012,7 @@ export default function DashboardPage() {
 
       {editingTask ? (
         <div className="fixed inset-0 z-40 grid place-items-center bg-[rgba(36,26,18,0.38)] px-4 backdrop-blur-[2px]">
-          <section className="w-full max-w-lg rounded-2xl border p-5" style={{ borderColor: "var(--line)", background: "linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,250,245,0.93))", boxShadow: "var(--shadow-strong)" }}>
+          <section className="w-full max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border p-5" style={{ borderColor: "var(--line)", background: "linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,250,245,0.93))", boxShadow: "var(--shadow-strong)" }}>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold tracking-tight">Edit Task</h3>
               <button type="button" className="ghost-btn px-3 py-1.5 text-xs" onClick={closeEditModal} disabled={isSavingEdit}>
@@ -1037,7 +1058,7 @@ export default function DashboardPage() {
 
       {pendingDeleteTask ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(36,26,18,0.38)] px-4 backdrop-blur-[2px]">
-          <section className="w-full max-w-md rounded-2xl border p-5" style={{ borderColor: "var(--line)", background: "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,250,245,0.94))", boxShadow: "var(--shadow-strong)" }}>
+          <section className="w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border p-5" style={{ borderColor: "var(--line)", background: "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,250,245,0.94))", boxShadow: "var(--shadow-strong)" }}>
             <p className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--muted)" }}>
               Confirm delete
             </p>

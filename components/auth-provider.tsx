@@ -8,6 +8,59 @@ import { clearDemoSession, readDemoSession } from "@/lib/demo-auth";
 
 const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
 
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const segments = token.split(".");
+
+  if (segments.length < 2) {
+    return null;
+  }
+
+  try {
+    const normalizedPayload = segments[1].replace(/-/g, "+").replace(/_/g, "/");
+    const paddedPayload = normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, "=");
+    const json = atob(paddedPayload);
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function getProvisionalUserFromCookie() {
+  const authToken = readCookie("auth-token");
+
+  if (!authToken || authToken.startsWith("demo-")) {
+    return null;
+  }
+
+  const payload = decodeJwtPayload(authToken);
+  const email = typeof payload?.email === "string" ? payload.email : "";
+  const nameFromMetadata =
+    typeof payload?.user_metadata === "object" && payload.user_metadata !== null
+      ? (payload.user_metadata as { full_name?: unknown; name?: unknown }).full_name ??
+        (payload.user_metadata as { full_name?: unknown; name?: unknown }).name
+      : null;
+
+  return {
+    uid: typeof payload?.sub === "string" ? payload.sub : "",
+    email,
+    name:
+      typeof nameFromMetadata === "string" && nameFromMetadata.trim()
+        ? nameFromMetadata
+        : email
+          ? email.split("@")[0]
+          : "Authenticated user",
+  };
+}
+
 type AuthProviderProps = {
   children: React.ReactNode;
 };
@@ -37,6 +90,13 @@ export default function AuthProvider({ children }: AuthProviderProps) {
       clearUser();
       setAuthReady(true);
       return;
+    }
+
+    const provisionalUser = getProvisionalUserFromCookie();
+
+    if (provisionalUser) {
+      setUser(provisionalUser);
+      setAuthReady(true);
     }
 
     const client = getSupabaseClient();

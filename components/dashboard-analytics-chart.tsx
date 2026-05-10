@@ -21,8 +21,8 @@ type DashboardAnalyticsChartProps = {
 
 export default function DashboardAnalyticsChart({ data }: DashboardAnalyticsChartProps) {
   return (
-    <div aria-label="Bar chart showing completed tasks by day" role="img" className="h-full w-full">
-      <ResponsiveContainer width="100%" height="100%">
+    <div aria-label="Bar chart showing completed tasks by day" role="img" className="h-full min-h-64 w-full min-w-0">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={256}>
         <BarChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(140,120,98,0.25)" />
           <XAxis dataKey="day" tick={{ fontSize: 11 }} />

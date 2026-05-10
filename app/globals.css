@@ -343,6 +343,16 @@ html {
   background: rgba(255, 255, 255, 0.95);
 }
 
+.task-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.task-table th,
+.task-table td {
+  min-width: 0;
+}
+
 .task-table .task-row td {
   transition: background-color 160ms ease, border-color 160ms ease;
 }
@@ -428,6 +438,11 @@ html {
 }
 
 @media (max-width: 640px) {
+  .dashboard-shell {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+
   .auth-shell {
     padding: 0.9rem;
   }
@@ -464,6 +479,14 @@ html {
 
   .surface-card {
     border-radius: 0.9rem;
+  }
+
+  .chart-panel {
+    padding: 0.35rem;
+  }
+
+  .task-table {
+    font-size: 0.92rem;
   }
 
   .mobile-menu-panel {
